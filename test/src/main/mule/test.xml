@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:ftp="http://www.mulesoft.org/schema/mule/ftp" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/ftp http://www.mulesoft.org/schema/mule/ftp/current/mule-ftp.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="219d4aa2-a536-451c-a3f3-ba5cabeaa980" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="fce77e83-5013-4404-936a-cda7a0b37cf6" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="Addis@1985" database="yenati" />
+	</db:config>
+	<db:config name="Database_Config1" doc:name="Database Config" doc:id="e1b37847-987b-4044-9b0e-97a2af68931e" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="Addis@1985" database="yenati" />
+	</db:config>
+	<flow name="testFlow" doc:id="28518e82-4f01-4449-aafb-c7b598e04bc3" >
+		<http:listener doc:name="Listener" doc:id="6cb682d7-0741-47cb-963a-b4886d6e2ada" config-ref="HTTP_Listener_config" path="/xl"/>
+		<db:insert doc:name="Insert" doc:id="9856c9e9-9592-4dd5-b3d4-154584f32388" config-ref="Database_Config">
+			<db:sql ><![CDATA[insert into `MyGuests`(`id` , `first_name` , `last_name` , `email`,:`address`, :`card`, :`phone`, :`ip_address`) 
+value (:id, :first_name, :last_name, :email,:address, :card, :phone, :ip_address);]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{id:payload.id,
+	first_name:payload.first_name,
+	last_name:payload.last_name,
+	email:payload.email,
+	address:payload.address,
+	card:payload.card,
+	phone:payload.phone,
+	ip_address:payload.ip_address}]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="Transform Message" doc:id="9cb4b73d-dcc5-4155-98f0-2db433cd4248" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+"msg":"done"]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="testFlow5" doc:id="8628f54d-fbaa-4c4b-a2b2-a02cbb2dafdf" >
+		<http:listener doc:name="Listener" doc:id="82d2c324-1fd5-41e1-ad55-17e583be9b41" config-ref="HTTP_Listener_config" path="/dd"/>
+		<batch:job jobName="testBatch_Job" doc:id="3fc8321b-8174-46c6-8e7a-55f22c6db8b7" blockSize="10">
+			<batch:process-records >
+				<batch:step name="Batch_Step" doc:id="93df4bda-f1ee-479a-bfc4-2f4c73d9289e" >
+					<file:read doc:name="Read" doc:id="f2b25bcf-1dde-49e7-aad9-3c0de91b75a9" path="C:\Users\Natan\Downloads\testing.csv" />
+					<file:write doc:name="Write" doc:id="0287e8a7-b23a-4a88-92d1-3dde15614a92" path="C:\Users\Natan\Desktop\write docc\Muwrite"/>
+					<ee:transform doc:name="Transform Message" doc:id="2a25f568-caa8-4f96-a60d-38f16496d674">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+					<logger level="INFO" doc:name="Logger" doc:id="b0bf7514-f1cc-4e15-ae9e-1feec4c26151" message="#[payload]" />
+				</batch:step>
+				<batch:step name="Batch_Step1" doc:id="a17ca966-10a3-49a9-a7e3-e1ca3fc1b1aa" acceptPolicy="ONLY_FAILURES">
+					<file:write doc:name="Write" doc:id="aeac6c56-348a-45d8-91a7-793fc234f586" path="C:\Users\Natan\Desktop\write docc\failure"/>
+				</batch:step>
+			</batch:process-records>
+			<batch:on-complete>
+				<set-payload value="done" doc:name="Set Payload" doc:id="6fe98bf9-22d9-48bf-8d39-fa44dd1fecef" />
+			</batch:on-complete>
+		</batch:job>
+	</flow>
+	<flow name="testFlow6" doc:id="62ad1543-e657-4b33-bee4-7245bb8de306" >
+		<http:listener doc:name="Listener" doc:id="a39d6e7a-a515-4a4c-8eb3-e6c5da931f69" config-ref="HTTP_Listener_config" path="/update"/>
+		<ee:transform doc:name="Transform Message" doc:id="eb78db20-fbd5-4866-897f-386b0a156851" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload map (( val, indx ) -> 
+	{
+		id: val.id,
+		first_name: val.first_name,
+		last_name: val.last_name,
+		email: val.email,
+		snn: val.snn
+	}
+)
+
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<db:bulk-update doc:name="Bulk update" doc:id="e230d59d-1bcb-46c7-977b-f106501f05c0" config-ref="Database_Config1">
+			<db:sql ><![CDATA[update projects set 
+id=:id,first_name=:first_name,last_name=:last_name,email=:email,snn=:snn
+where snn=:snn
+]]></db:sql>
+		</db:bulk-update>
+		<ee:transform doc:name="Transform Message" doc:id="de82dfd7-9f9e-4362-a84c-deb730e8366a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"msg":"updated"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="testFlow4" doc:id="646ab686-8d8f-46e6-9f14-28e5dfcfdb83" >
+		<http:listener doc:name="Listener" doc:id="4d674de6-fd80-4f8c-b69a-6931876a51c1" config-ref="HTTP_Listener_config" path="/read"/>
+		<ee:transform doc:name="Transform Message" doc:id="b014c22d-9a77-4260-a92f-ba89f6247fa5" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map (( val, indx ) -> 
+	{
+		id: val.id,
+		first_name: val.first_name,
+		last_name: val.last_name,
+		snn: val.snn
+	}
+)
+
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<db:bulk-insert doc:name="Bulk insert" doc:id="bd4a088d-cccb-45a3-bd37-63eed226fde0" config-ref="Database_Config">
+			<db:sql ><![CDATA[insert into `projects` ( `id`, `first_name`, `last_name`, `snn` )
+values (:id, :first_name, :last_name, :snn )]]></db:sql>
+		</db:bulk-insert>
+		<ee:transform doc:name="Transform Message" doc:id="e764d81d-78ac-459b-b64a-a3a5444e0f6b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"msg":"zare"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="testFlow2" doc:id="c0f52373-18dd-4808-b6d6-150960897d97" >
+		<http:listener doc:name="Listener" doc:id="6d0aba8f-a1a5-4e63-9bab-594197f34062" config-ref="HTTP_Listener_config" path="/bulk"/>
+		<ee:transform doc:name="Transform Message" doc:id="fea8bba7-29e8-4c26-abeb-15b837ec6775" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload map ((v,i) -> 
+	{
+	discription: v.discription,
+	Username: v.Username,
+	UserID: v.UserID,
+	Dates: v.Dates
+}
+)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<db:bulk-insert doc:name="Bulk insert" doc:id="ef110c36-77e1-4df7-8543-e7625e7a13b5" config-ref="Database_Config">
+			<db:sql ><![CDATA[insert into `users`(`discription`, `Dates`, `UserID`, `Username`)
+values (:discription, :Dates, :UserID, :Username );]]></db:sql>
+		</db:bulk-insert>
+		<ee:transform doc:name="Transform Message" doc:id="118fc6c0-5097-456a-99e0-f30d41f74fc2" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	
+	"msg":"done"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="testFlow1" doc:id="d86722a5-b2df-4ef8-be87-ec9d841f1876" >
+		<http:listener doc:name="Listener" doc:id="c821f557-6b09-4d55-baaa-e9180a5e9ab3" config-ref="HTTP_Listener_config" path="/gg"/>
+		<db:select doc:name="Select" doc:id="f5e54b2b-1a6f-42ec-af33-9fb805b7d25c" config-ref="Database_Config">
+			<db:sql ><![CDATA[select * from users;]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="afeef348-6d9a-4bda-8688-29a6ebbc7911" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="testFlow3" doc:id="fe2342bb-7ed7-40c6-8a58-aefc7ebd0378" >
+		<http:listener doc:name="Listener" doc:id="3f8dee8e-985f-4b9b-b2af-e70695be15eb" config-ref="HTTP_Listener_config" path="/other"/>
+		<db:insert doc:name="Insert" doc:id="6bfad888-9186-4e85-ab0e-79158d0f4dd1" config-ref="Database_Config1">
+			<db:sql ><![CDATA[insert into `users`(`discription`, `Dates`, `UserID`, `Username`)
+value (:discription, :Dates, :UserID, :Username );]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+discription: payload.discription,
+   Dates: payload.Dates,
+   UserID: payload.UserID,
+   Username: payload.Username 
+   }]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="Transform Message" doc:id="9fc61d60-df43-4de6-947e-1ee6d2432322" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"msg":"done"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

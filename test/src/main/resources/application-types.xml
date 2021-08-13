@@ -1,0 +1,51 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="b" format="json">
+      <types:shape format="weave" example="examples/wc.json"><![CDATA[%dw 2.0
+
+type b = {|
+  id: Number {"typeId": "int"}, 
+  name: String, 
+  username: String, 
+  email: String, 
+  address: {|
+    street: String, 
+    suite: String, 
+    city: String, 
+    zipcode: String, 
+    geo: {|
+      lat: String, 
+      lng: String
+    |}
+  |}, 
+  phone: String, 
+  website: String, 
+  company: {|
+    name: String, 
+    catchPhrase: String, 
+    bs: String
+  |}
+|} {"example": "{\\\"id\\\":1,\\\"name\\\":\\\"Leanne Graham\\\",\\\"username\\\":\\\"Bret\\\",\\\"email\\\":\\\"Sincere@april.biz\\\",\\\"address\\\":{\\\"street\\\":\\\"Kulas Light\\\",\\\"suite\\\":\\\"Apt. 556\\\",\\\"city\\\":\\\"Gwenborough\\\",\\\"zipcode\\\":\\\"92998-3874\\\",\\\"geo\\\":{\\\"lat\\\":\\\"-37.3159\\\",\\\"lng\\\":\\\"81.1496\\\"}},\\\"phone\\\":\\\"1-770-736-8031 x56442\\\",\\\"website\\\":\\\"hildegard.org\\\",\\\"company\\\":{\\\"name\\\":\\\"Romaguera-Crona\\\",\\\"catchPhrase\\\":\\\"Multi-layered client-server neural-net\\\",\\\"bs\\\":\\\"harness real-time e-markets\\\"}}"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="ro" format="java">
+      <types:shape format="raml"><![CDATA[#%RAML 1.0 DataType
+type: string]]></types:shape>
+    </types:type>
+    <types:type name="r" format="json">
+      <types:shape format="weave" example="examples/insrt.json"><![CDATA[%dw 2.0
+
+type r = {|
+  discription: String, 
+  Dates: String, 
+  UserID: String, 
+  Username: String
+|} {"example": "{\\\"discription\\\":\\\"referal\\\",\\\"Dates\\\":\\\"03\\/05\\/2028\\\",\\\"UserID\\\":\\\"777\\\",\\\"Username\\\":\\\"yubhn v\\\"}"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#fea8bba7-29e8-4c26-abeb-15b837ec6775"/>
+</types:mule>
